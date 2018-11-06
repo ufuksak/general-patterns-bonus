@@ -74,8 +74,7 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
         def returnStmtExpr = returnStmts
                 .findAll { it.expression.map { it.castExpr }.present }
                 .first().expression
-        def fieldNameExpr = returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
-        fieldNameExpr
+        returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
     }
 
     private static List<MethodDeclaration> findFieldSetterInUnit(Unit unit, NameExpr field) {
@@ -87,7 +86,8 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
     }
 
     private static boolean hasCastReturn(MethodDeclaration method) {
-        !method.getType().resolve().isVoid() &&
+        method.getBody().present &&
+                method.getBody().get().getStatements() != null &&
                 method.getBody().get().getStatements().any {
                     it.isReturnStmt() && it.asReturnStmt().expression
                             .filter { it.isCastExpr() }.present
