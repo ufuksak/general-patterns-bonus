@@ -14,6 +14,7 @@ import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.stmt.Statement
+import com.github.javaparser.ast.type.Type
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
@@ -34,20 +35,20 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
         def returnStmtExpr = returnStmts
                 .findAll { it.expression.map { it.castExpr }.present }
                 .first().expression
-        def field = returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
-        TestMethodNomenclature testMethodNomenclature = nomenclatures.getTestMethodNomenclature(unitUnderTest.javaClass)
-        TestGeneratorResult result = new TestGeneratorResult();
-        String testName = testMethodNomenclature.requestTestMethodName(BootcampTestTypes.CASTING_RETURN, method)
+        def fieldNameExpr = returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
 
+        TestMethodNomenclature testMethodNomenclature = nomenclatures.getTestMethodNomenclature(unitUnderTest.javaClass)
+        TestGeneratorResult result = new TestGeneratorResult()
+        String testName = testMethodNomenclature.requestTestMethodName(BootcampTestTypes.CASTING_RETURN, method)
+        def setter = findSetter(unitUnderTest, fieldNameExpr)
+        def fieldType = setter.parameters.first().type
         String testBody =
                 """@Test public void $testName(){
-                    //arrange
                     ${unitUnderTest.className} object = new ${unitUnderTest.className}();
-                    object.${findSetter(unitUnderTest, field)}(42);
-                    //act
+                    $fieldType expected = 42;
+                    object.${setter.name}(expected);
                     ${method.type.toString()} actual = object.${method.name}();
-                    //assert
-                    assertEquals(42, actual);
+                    assertEquals(expected, actual);
             }""";
         DependableNode<MethodDeclaration> node = DependableNode.from(
                 JavaParser.parseBodyDeclaration(testBody).asMethodDeclaration())
@@ -56,13 +57,13 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
         result
     }
 
-    private static String findSetter(Unit unit, NameExpr field) {
+    private static MethodDeclaration findSetter(Unit unit, NameExpr field) {
         // TODO reuse pojoMethodsFinder
         unit.cu.findAll(MethodDeclaration.class).findAll {
             it.isPublic() &&
                     it.name.toString().startsWith("set") &&
                     it.parameters.every { it.name == field.name }
-        }.first().name // TODO case if no setter
+        }.first() // TODO case if no setter
     }
 
     @Override

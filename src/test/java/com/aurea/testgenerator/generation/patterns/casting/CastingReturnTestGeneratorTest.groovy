@@ -33,23 +33,21 @@ class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
             }
         """, """
             package sample;
-            
+
             import javax.annotation.Generated;
             import org.junit.Test;
             import static org.junit.Assert.assertEquals;
-
+            
             @Generated("GeneralPatterns")
             public class FooPatternTest {
             
                 @Test
                 public void getValueAsLongCasting() {
-                    // arrange
                     Foo object = new Foo();
-                    object.setValue(42);
-                    // act
+                    int expected = 42;
+                    object.setValue(expected);
                     long actual = object.getValueAsLong();
-                    // assert
-                    assertEquals(42, actual);
+                    assertEquals(expected, actual);
                 }
             }
             """
