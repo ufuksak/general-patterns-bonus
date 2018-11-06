@@ -4,16 +4,8 @@ import com.aurea.testgenerator.MatcherPipelineTest
 import com.aurea.testgenerator.generation.TestGenerator
 
 class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
+
     def "Generate"() {
-    }
-
-    def "GetType"() {
-    }
-
-    def "ShouldBeVisited"() {
-    }
-
-    def "Generate1"() {
         expect:
         onClassCodeExpect """
             public class MyClassType {
@@ -43,10 +35,10 @@ class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
             
                 @Test
                 public void getValueAsLongCasting() {
-                    Foo object = new Foo();
+                    Foo fixture = new Foo();
                     int expected = 42;
-                    object.setValue(expected);
-                    long actual = object.getValueAsLong();
+                    fixture.setValue(expected);
+                    long actual = fixture.getValueAsLong();
                     assertEquals(expected, actual);
                 }
             }
