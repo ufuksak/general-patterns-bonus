@@ -21,8 +21,11 @@ import org.springframework.stereotype.Component
 @Profile("casting")
 @Component
 class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
-    static def testValues = ["String": "\"testValue\"", "int": 42, "Integer": 42,
-                             "Number": 42, "char": 42, "Boolean": Boolean.TRUE]
+    static def testValues = ["String" : "\"testValue\"", "int": 42, "Integer": 42,
+                             "long"   : 42, "Long": 42, "short": 42, "Short": 42,
+                             "Number" : 42, "char": 42, "Character": 42,
+                             "float"  : 42, "Float": 42,
+                             "Boolean": Boolean.TRUE, "boolean": Boolean.TRUE]
 
     CastingReturnTestGenerator(JavaParserFacade solver, TestGeneratorResultReporter reporter, CoverageReporter visitReporter, NomenclatureFactory nomenclatures) {
         super(solver, reporter, visitReporter, nomenclatures);
