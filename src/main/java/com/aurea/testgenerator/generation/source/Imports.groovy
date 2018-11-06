@@ -14,6 +14,7 @@ class Imports {
     static final ImportDeclaration JUNITPARAMS_PARAMETERS = parse('junitparams.Parameters')
     static final ImportDeclaration ASSERTJ_OFFSET = parse('org.assertj.core.data.Offset')
     static final ImportDeclaration ASSERTJ_ASSERTTHAT = parseStatic('org.assertj.core.api.Assertions.assertThat')
+    static final ImportDeclaration JUNIT_ASSERT_EQUALS = parseStatic('org.junit.Assert.assertEquals')
     static final ImportDeclaration SOFT_ASSERTIONS = parse('org.assertj.core.api.SoftAssertions')
     static final ImportDeclaration COLLECTIONS = parse('java.util.Collections')
     static final ImportDeclaration IMMUTABLE_MAP = parse('com.google.common.collect.ImmutableMap')
