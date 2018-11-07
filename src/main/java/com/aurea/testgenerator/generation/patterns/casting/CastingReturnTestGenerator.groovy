@@ -12,6 +12,7 @@ import com.aurea.testgenerator.reporting.TestGeneratorResultReporter
 import com.aurea.testgenerator.source.Unit
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
 import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
@@ -25,6 +26,7 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
                              "long"   : 42, "Long": 42, "short": 42, "Short": 42,
                              "Number" : 42, "char": 42, "Character": 42,
                              "float"  : 42, "Float": 42,
+                             "double" : 42, "Double": 42,
                              "Boolean": Boolean.TRUE, "boolean": Boolean.TRUE]
 
     CastingReturnTestGenerator(JavaParserFacade solver, TestGeneratorResultReporter reporter, CoverageReporter visitReporter, NomenclatureFactory nomenclatures) {
@@ -64,10 +66,11 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
     @Override
     protected boolean shouldBeVisited(Unit unit, MethodDeclaration method) {
         super.shouldBeVisited(unit, method) &&
-                hasCastReturn(method) && {
-            def field = getCastField(method)
-            !findFieldSetterInUnit(unit, field).isEmpty()
-        }
+                hasCastReturn(method) &&
+                {
+                    def field = getCastField(method)
+                    !(findFieldSetterInUnit(unit, field).isEmpty())
+                }
     }
 
     private static NameExpr getCastField(MethodDeclaration method) {
@@ -75,15 +78,27 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
                 .findAll { it.isReturnStmt() }
                 .collect { it.asReturnStmt() }
         def returnStmtExpr = returnStmts
-                .findAll { it.expression.map { it.castExpr }.present }
+                .findAll { it.expression.map { it.castExpr || containsCastMethod(it) }.present }
                 .first().expression
-        returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
+        if (returnStmtExpr.present && returnStmtExpr.get().isMethodCallExpr()) {
+            returnStmtExpr.get().asMethodCallExpr().arguments.first() as NameExpr
+        } else {
+            returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
+        }
+    }
+
+    private static boolean containsCastMethod(Expression expr) {
+        expr.isMethodCallExpr() &&
+                expr.asMethodCallExpr().scope.map {
+                    it.isClassExpr()
+                }.present &&
+                expr.asMethodCallExpr().name.toString() == "cast"
     }
 
     private static List<MethodDeclaration> findFieldSetterInUnit(Unit unit, NameExpr field) {
         unit.cu.findAll(MethodDeclaration.class).findAll {
             it.isPublic() &&
-                    it.name.toString().toLowerCase() == "set${field.name}" &&
+                    it.name.toString().toLowerCase().equalsIgnoreCase("set${field.name}") &&
                     it.parameters.every { it.name == field.name }
         }
     }
@@ -93,7 +108,8 @@ class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
                 method.getBody().get().getStatements() != null &&
                 method.getBody().get().getStatements().any {
                     it.isReturnStmt() && it.asReturnStmt().expression
-                            .filter { it.isCastExpr() }.present
+                            .filter { it.isCastExpr() || containsCastMethod(it) }
+                            .present
                 }
     }
 }
