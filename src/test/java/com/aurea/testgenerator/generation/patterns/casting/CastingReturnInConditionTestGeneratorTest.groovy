@@ -3,7 +3,7 @@ package com.aurea.testgenerator.generation.patterns.casting
 import com.aurea.testgenerator.MatcherPipelineTest
 import com.aurea.testgenerator.generation.TestGenerator
 
-class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
+class CastingReturnInConditionTestGeneratorTest extends MatcherPipelineTest {
 
     def "Generate"() {
         expect:
@@ -19,8 +19,12 @@ class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
                     this.value = value;
                 }
             
-                public long getValueAsLong() {
-                    return (long) value;
+                public Long getValueAsLong() {
+                    if (value instanceof Long) {
+                        return (Long) value;
+                    } else {
+                        return null;
+                    }
                 }
             }
         """, """
@@ -38,7 +42,7 @@ class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
                     Foo fixture = new Foo();
                     int expected = 42;
                     fixture.setValue(expected);
-                    long actual = fixture.getValueAsLong();
+                    Long actual = fixture.getValueAsLong();
                     assertEquals(expected, actual);
                 }
             }
@@ -48,6 +52,6 @@ class CastingReturnTestGeneratorTest extends MatcherPipelineTest {
 
     @Override
     TestGenerator generator() {
-        return new PlainCastingReturnTestGenerator(solver, reporter, visitReporter, nomenclatureFactory)
+        return new ConditionCastingReturnTestGenerator(solver, reporter, visitReporter, nomenclatureFactory)
     }
 }

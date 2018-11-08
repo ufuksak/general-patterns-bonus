@@ -48,6 +48,6 @@ class ClassCastReturnTestGeneratorTest extends MatcherPipelineTest {
 
     @Override
     TestGenerator generator() {
-        return new CastingReturnTestGenerator(solver, reporter, visitReporter, nomenclatureFactory)
+        return new PlainCastingReturnTestGenerator(solver, reporter, visitReporter, nomenclatureFactory)
     }
 }
