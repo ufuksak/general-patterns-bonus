@@ -1,5 +1,6 @@
 package com.aurea.testgenerator.generation.patterns.casting
 
+import com.aurea.testgenerator.generation.TestGeneratorResult
 import com.aurea.testgenerator.generation.names.NomenclatureFactory
 import com.aurea.testgenerator.reporting.CoverageReporter
 import com.aurea.testgenerator.reporting.TestGeneratorResultReporter
@@ -18,12 +19,23 @@ class ConditionCastingReturnTestGenerator extends CastingReturnTestGenerator {
     }
 
     @Override
+    protected TestGeneratorResult generate(MethodDeclaration method, Unit unitUnderTest) {
+        TestGeneratorResult result = super.generate(method, unitUnderTest)
+        NameExpr fieldNameExpr = getCastField(method)
+        def setter = findFieldSetterInUnit(fieldNameExpr, unitUnderTest).first()
+        def fieldType = setter.parameters.first().type
+
+        result.tests += generate(method, unitUnderTest, null, fieldType, setter.name).tests
+        result
+    }
+
+    @Override
     protected boolean shouldBeVisited(Unit unit, MethodDeclaration method) {
         return super.shouldBeVisited(unit, method) &&
                 hasCastReturn(method) &&
                 {
                     def field = getCastField(method)
-                    field && !(findFieldSetterInUnit(unit, field).isEmpty())
+                    field && !(findFieldSetterInUnit(field, unit).isEmpty())
                 }
     }
 

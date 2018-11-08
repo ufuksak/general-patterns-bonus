@@ -25,7 +25,7 @@ class PlainCastingReturnTestGenerator extends CastingReturnTestGenerator {
                 hasCastReturn(method) &&
                 {
                     def field = getCastField(method)
-                    !(findFieldSetterInUnit(unit, field).isEmpty())
+                    !(findFieldSetterInUnit(field, unit).isEmpty())
                 }
     }
 

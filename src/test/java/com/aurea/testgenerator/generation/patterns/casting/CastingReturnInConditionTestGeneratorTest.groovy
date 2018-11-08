@@ -37,16 +37,25 @@ class CastingReturnInConditionTestGeneratorTest extends MatcherPipelineTest {
             @Generated("GeneralPatterns")
             public class FooPatternTest {
             
-                @Test
-                public void getValueAsLongCasting() {
-                    Foo fixture = new Foo();
-                    int expected = 42;
-                    fixture.setValue(expected);
-                    Long actual = fixture.getValueAsLong();
-                    assertEquals(expected, actual);
-                }
+            @Test
+            public void getValueAsLongCasting() {
+                Foo fixture = new Foo();
+                int expected = 42;
+                fixture.setValue(expected);
+                Long actual = fixture.getValueAsLong();
+                assertEquals(expected, actual);
             }
-            """
+        
+            @Test
+            public void getValueAsLongWithZeroArgumentCasting() {
+                Foo fixture = new Foo();
+                int expected = null;
+                fixture.setValue(expected);
+                Long actual = fixture.getValueAsLong();
+                assertEquals(expected, actual);
+            }
+        }
+        """
 
     }
 

@@ -14,11 +14,7 @@ import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
-import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 
 abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
     static def testValues = ["String" : "\"testValue\"", "int": 42, "Integer": 42,
@@ -35,24 +31,26 @@ abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
     @Override
     protected TestGeneratorResult generate(MethodDeclaration method, Unit unitUnderTest) {
         NameExpr fieldNameExpr = getCastField(method)
-
-        TestMethodNomenclature testMethodNomenclature = nomenclatures.getTestMethodNomenclature(unitUnderTest.javaClass)
-        TestGeneratorResult result = new TestGeneratorResult()
-        String testName = testMethodNomenclature.requestTestMethodName(BootcampTestTypes.CASTING_RETURN, method)
-        def setter = findFieldSetterInUnit(unitUnderTest, fieldNameExpr).first()
+        def setter = findFieldSetterInUnit(fieldNameExpr, unitUnderTest).first()
         def fieldType = setter.parameters.first().type
-        def expectedValue = testValues.getOrDefault(fieldType.toString(), "new $fieldType()")
+        generate(method, unitUnderTest, testValues.getOrDefault(fieldType.toString(), "new $fieldType()"), fieldType, setter.name)
+    }
+
+    protected TestGeneratorResult generate(MethodDeclaration method, Unit unitUnderTest, expectedValue, fieldType, setterName) {
+        TestMethodNomenclature testMethodNomenclature = nomenclatures.getTestMethodNomenclature(unitUnderTest.javaClass)
+        String testName = testMethodNomenclature.requestTestMethodName(BootcampTestTypes.CASTING_RETURN, method)
         String testBody =
                 """@Test public void $testName(){
                 ${unitUnderTest.className} fixture = new ${unitUnderTest.className}();
-                $fieldType expected = $expectedValue;
-                fixture.${setter.name}(expected);
+                ${fieldType} expected = ${expectedValue};
+                fixture.${setterName}(expected);
                 ${method.type.toString()} actual = fixture.${method.name}();
                 assertEquals(expected, actual);
             }""";
         DependableNode<MethodDeclaration> node = DependableNode.from(
                 JavaParser.parseBodyDeclaration(testBody).asMethodDeclaration())
         node.dependency.imports += [Imports.JUNIT_TEST, Imports.JUNIT_ASSERT_EQUALS]
+        TestGeneratorResult result = new TestGeneratorResult()
         result.tests << node
         result
     }
@@ -72,7 +70,7 @@ abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
         BootcampTestTypes.CASTING_RETURN;
     }
 
-    protected static List<MethodDeclaration> findFieldSetterInUnit(Unit unit, NameExpr field) {
+    protected static List<MethodDeclaration> findFieldSetterInUnit(NameExpr field, Unit unit) {
         unit.cu.findAll(MethodDeclaration.class).findAll {
             it.isPublic() &&
                     it.name.toString().toLowerCase().equalsIgnoreCase("set${field.name}") &&
