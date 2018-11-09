@@ -17,11 +17,7 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.WebClientAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.yaml.snakeyaml.Yaml;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 @SpringBootApplication
@@ -41,6 +37,21 @@ public class Main implements CommandLineRunner {
     @Autowired
     Pipeline pipeline;
 
+    /**
+     * If a --parallel=[path-to-config.yaml] key is provided, parallel test
+     * generations will be executed.
+     * Example of a config.yaml:
+     *
+     *
+     * - spring.profiles.active: "casting"
+     *   project.src: "D:\\projects\\butreference\\src\\main\\java\\aurea\\assignment01\\"
+     *   project.out: "D:\\projects\\butreference\\src\\test\\java\\01"
+     * - spring.profiles.active: "open-pojo"
+     *   project.src: "D:\\projects\\butreference\\src\\main\\java\\aurea\\assignment02\\"
+     *   project.out: "D:\\projects\\butreference\\src\\test\\java\\02"
+     *
+     *
+     */
     public static void main(String[] args) {
         Stopwatch stopwatch = Stopwatch.createStarted();
 
