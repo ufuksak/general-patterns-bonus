@@ -1,5 +1,7 @@
 package com.aurea.testgenerator;
 
+import com.aurea.testgenerator.args.ArgsParser;
+import com.aurea.testgenerator.yaml.YAMLParser;
 import com.google.common.base.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,6 +17,12 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration;
 import org.springframework.boot.autoconfigure.web.WebClientAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Optional;
 
 @SpringBootApplication
 @EnableAutoConfiguration(
@@ -35,11 +43,24 @@ public class Main implements CommandLineRunner {
 
     public static void main(String[] args) {
         Stopwatch stopwatch = Stopwatch.createStarted();
+
+        Optional<String> parallelConfigPath = new ArgsParser(args).getKey("--parallel");
+        if (parallelConfigPath.isPresent()) {
+            String path = parallelConfigPath.get();
+            new YAMLParser().parse(path)
+                    .parallel()
+                    .forEach(Main::runApp);
+        } else {
+            runApp(args);
+        }
+        logger.info("Executed in {}", stopwatch);
+    }
+
+    private static void runApp(String[] argsLine) {
         SpringApplication app = new SpringApplication(Main.class);
         app.setBannerMode(Banner.Mode.OFF);
-        ConfigurableApplicationContext context = app.run(args);
+        ConfigurableApplicationContext context = app.run(argsLine);
         context.close();
-        logger.info("Executed in {}", stopwatch);
     }
 
     @Override

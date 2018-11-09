@@ -57,9 +57,7 @@ class ConditionCastingReturnTestGenerator extends CastingReturnTestGenerator {
     @Override
     protected NameExpr getCastField(MethodDeclaration method) {
         def ifstmt = method.getBody().get().getStatements().last()
-
         if (!(ifstmt.isIfStmt() && ifstmt.asIfStmt().thenStmt.isBlockStmt())) return null
-
         def returnStmtExpr = ifstmt.asIfStmt().thenStmt.asBlockStmt().statements.findAll {
             it.isReturnStmt() && it.asReturnStmt().expression
                     .filter { it.isCastExpr() || containsCastMethod(it) }
