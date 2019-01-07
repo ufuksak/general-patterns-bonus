@@ -13,7 +13,9 @@ import com.aurea.testgenerator.source.Unit
 import com.github.javaparser.JavaParser
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.expr.Expression
+import com.github.javaparser.ast.expr.MethodCallExpr
 import com.github.javaparser.ast.expr.NameExpr
+import com.github.javaparser.ast.type.ClassOrInterfaceType
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 
 abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
@@ -23,6 +25,10 @@ abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
                              "float"  : 42, "Float": 42,
                              "double" : 42, "Double": 42,
                              "Boolean": Boolean.TRUE, "boolean": Boolean.TRUE]
+
+    static String[] testTypes = ["String", "int", "Integer", "long", "Long",
+                                 "short", "Short", "Number", "char", "Character",
+                                 "float", "Float", "double", "Double", "Boolean", "boolean"]
 
     CastingReturnTestGenerator(JavaParserFacade solver, TestGeneratorResultReporter reporter, CoverageReporter visitReporter, NomenclatureFactory nomenclatures) {
         super(solver, reporter, visitReporter, nomenclatures);
@@ -55,8 +61,31 @@ abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
         result
     }
 
+    private static boolean isKnownType(final MethodCallExpr methodCallExpr) {
+        boolean knownType = false
+        methodCallExpr.scope.map {
+            if(it.isClassExpr()) {
+                for (Node node : it.getChildNodes()) {
+                    if (node instanceof ClassOrInterfaceType) {
+                        ClassOrInterfaceType classOrInterfaceType = node.asClassOrInterfaceType()
+                        for (String type : testTypes) {
+                            if (classOrInterfaceType.name.toString().contains(type)) {
+                                knownType = true
+                                break
+                            }
+                        }
+                    }
+                }
+            } else {
+                knownType = true
+            }
+        }
+        return knownType
+    }
+
     protected static boolean containsCastMethod(Expression expr) {
         expr.isMethodCallExpr() &&
+                isKnownType(expr.asMethodCallExpr()) &&
                 expr.asMethodCallExpr().scope.map {
                     it.isClassExpr()
                 }.present &&
@@ -67,12 +96,12 @@ abstract class CastingReturnTestGenerator extends AbstractMethodTestGenerator {
 
     @Override
     protected TestType getType() {
-        BootcampTestTypes.CASTING_RETURN;
+        BootcampTestTypes.CASTING_RETURN
     }
 
     protected static List<MethodDeclaration> findFieldSetterInUnit(NameExpr field, Unit unit) {
         unit.cu.findAll(MethodDeclaration.class).findAll {
-            it.isPublic() &&
+            it.isPublic() && field != null &&
                     it.name.toString().toLowerCase().equalsIgnoreCase("set${field.name}") &&
                     it.parameters.every { it.name == field.name }
         }

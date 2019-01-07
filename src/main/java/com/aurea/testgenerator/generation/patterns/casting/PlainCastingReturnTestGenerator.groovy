@@ -5,12 +5,11 @@ import com.aurea.testgenerator.reporting.CoverageReporter;
 import com.aurea.testgenerator.reporting.TestGeneratorResultReporter;
 import com.aurea.testgenerator.source.Unit;
 import com.github.javaparser.ast.body.MethodDeclaration
-import com.github.javaparser.ast.expr.Expression
 import com.github.javaparser.ast.expr.NameExpr
-import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.stmt.Statement
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade
 import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Component
 
 @Component
 @Profile("casting")
@@ -49,8 +48,10 @@ class PlainCastingReturnTestGenerator extends CastingReturnTestGenerator {
                 .first().expression
         if (returnStmtExpr.present && returnStmtExpr.get().isMethodCallExpr()) {
             returnStmtExpr.get().asMethodCallExpr().arguments.first() as NameExpr
-        } else {
-            returnStmtExpr.map { it.asCastExpr().expression }.get() as NameExpr
+        } else if (returnStmtExpr.present && returnStmtExpr.get().isCastExpr()
+                && returnStmtExpr.get().asCastExpr().expression != null
+                && returnStmtExpr.get().asCastExpr().expression instanceof NameExpr) {
+            returnStmtExpr.map { it.asCastExpr().expression }.get() asNameExpr()
         }
     }
 }
